@@ -16,8 +16,8 @@
 #include "TStyle.h"
 #include "TString.h"
 #include "TMath.h"
-#include "TTree.h"
 #include "TFile.h"
+#include "TTree.h"
 #include "TCanvas.h"
 #include "TH1F.h"
 #include "TLegend.h"
@@ -29,12 +29,14 @@
 
 bool showAll_ = false;
 bool verbose_ = false;
+TFile* origFile_ = 0;
+TFile* newFile_  = 0;
 TTree* origEvents_ = 0;
 TTree* newEvents_  = 0;
 Int_t nMax_ = 0;
 
 
-Double_t plotVar( const TString& var )
+Double_t plotVar( const TString& var, int area = 0 )
 {
   // Create individual name
   TString name( var );
@@ -56,59 +58,83 @@ Double_t plotVar( const TString& var )
 
   // Reference histograms
   TString nameHistoOrig( "orig_" + name );
-  origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
-  TH1F* origHisto( ( TH1F* )gROOT->Get( nameHistoOrig ) );
-  if ( origHisto ) {
-    origHisto->SetLineColor( kRed );
-    origHisto->SetFillColor( kYellow );
+  TString nameHistoOrigTmp( nameHistoOrig + "_tmp" );
+  origEvents_->Draw( var + ">>" + nameHistoOrigTmp, "", "", nMax_ );
+  TH1F* origHistoTmp( ( TH1F* )gROOT->Get( nameHistoOrigTmp ) );
+  if ( !origHistoTmp ) {
+    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "--> histogram '" << nameHistoOrigTmp.Data() << "' could not be plotted." << std::endl;
+    delete canvas;
+    return -1;
   }
-  else {
+  Int_t xMin( area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin() );
+  Int_t xMax( area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax() );
+  TH1F* origHisto( new TH1F( nameHistoOrig, origHistoTmp->GetTitle(), origHistoTmp->GetNbinsX(), xMin, xMax ) ); // Re-using nunmber of bins, regardless, if same range is used.
+  origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
+  if ( !origHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoOrig.Data() << "' could not be plotted." << std::endl;
     delete canvas;
     return -1;
   }
+  origHisto->SetLineColor( kRed );
+  origHisto->SetFillColor( kYellow );
+  delete origHistoTmp;
 
   // New histograms
   TString nameHistoNew( "new_" + name );
   TH1F* newHisto( new TH1F( nameHistoNew, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() ) );
   newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
-  if ( newHisto ) {
-    newHisto->SetLineColor( kBlue );
-  }
-  else {
+  if ( !newHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoNew.Data() << "' could not be plotted." << std::endl;
     delete canvas;
     return -1;
   }
+  newHisto->SetLineColor( kBlue );
 
   // Plot
   origHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
   origHisto->Draw();
   newHisto->Draw( "Same" );
   TString nameDiffHist( "diff_" + name );
-  TH1F* diffHisto( new TH1F(nameDiffHist, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() ) );
+  TH1F* diffHisto( new TH1F( nameDiffHist, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() ) );
+  if ( !diffHisto ) {
+    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "--> histogram '" << nameDiffHist.Data() << "' could not be plotted." << std::endl;
+    delete canvas;
+    return -1;
+  }
   diffHisto->Add( origHisto );
   diffHisto->Add( newHisto, -1. );
   diffHisto->SetMarkerColor( kBlack );
   diffHisto->SetMarkerStyle( 7 );
   diffHisto->SetLineColor( kBlack );
   diffHisto->Draw( "P Same" );
-  TLegend * leg = new TLegend( 0.5, 0.8, 0.99, 0.99 );
+  TLegend * leg = new TLegend( 0.75, 0.9, 0.99, 0.99 );
   leg->AddEntry( origHisto, "orig" );
   leg->AddEntry( newHisto, "new", "L" );
-  leg->AddEntry( diffHisto, "diff (|orig-new|)", "P" );
+  leg->AddEntry( diffHisto, "diff (orig-new)", "P" );
   leg->Draw();
 
   // Check
   Double_t diff( 0. );
   for ( Int_t iBin = 0; iBin <= diffHisto->GetNbinsX() + 1; ++iBin ) {
     diff += std::fabs( diffHisto->GetBinContent( iBin ) );
+    if ( std::fabs( diffHisto->GetBinContent( iBin ) ) != 0. ) {
+      if ( iBin == 0 || iBin == diffHisto->GetBinContent( iBin ) || verbose_ ) {
+        TString mode( verbose_ ? "INFO" : "WARNING" );
+        std::cout << "validatePatTuple " << mode.Data() << ":" << std::endl;
+        std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
+        if ( iBin == 0 )                                     std::cout << " (underflow)";
+        else if ( iBin == diffHisto->GetBinContent( iBin ) ) std::cout << " (overflow)";
+        std::cout << std::endl;
+      }
+    }
   }
   if ( diff != 0. ) {
     std::cout << "validatePatTuple WARNING:" << std::endl;
-    std::cout << "--> variable '" << var.Data() << "' has differences." << std::endl;
+    std::cout << "--> variable '" << var.Data() << "' has differences in bins" << std::endl;
   }
   else if ( !showAll_ ) {
     delete canvas;
@@ -188,31 +214,31 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[0].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[0].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[1].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[1].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[2].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[2].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[3].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[3].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[4].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[4].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[5].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[5].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[6].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[6].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[7].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[7].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[8].second" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[8].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(0)" );
@@ -366,175 +392,175 @@ Double_t plotVarAddBTaggings()
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[0].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[0].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[1].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[1].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[2].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[2].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[3].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[3].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[4].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[4].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[5].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[5].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[6].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[6].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[7].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[7].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[8].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[8].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[9].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[9].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[10].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[10].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[11].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[11].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[12].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[12].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[13].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[13].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[14].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[14].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[15].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[15].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[16].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[16].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[17].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[17].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[18].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[18].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[19].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[19].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[20].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[20].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[21].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[21].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[22].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[22].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[23].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[23].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[24].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[24].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[25].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[25].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[26].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[26].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[27].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[27].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[28].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[28].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[29].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[29].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[30].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[30].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[31].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[31].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[32].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[32].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[33].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[33].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[34].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[34].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[35].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[35].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[36].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[36].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[37].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[37].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[38].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[38].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[39].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[39].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[40].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[40].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[41].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[41].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[42].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[42].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[43].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[43].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[44].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[44].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[45].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[45].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[46].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[46].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[47].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[47].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[48].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[48].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[49].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[49].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[50].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[50].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[51].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[51].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[52].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[52].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[53].second" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[53].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[54].second" );
+//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[54].second", 1 );
 //   if (returnValue  < 0. ) return -returnSum;
 //   returnSum += returnValue;
-//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[55].second" );
+//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[55].second", 1 );
 //   if (returnValue  < 0. ) return -returnSum;
 //   returnSum += returnValue;
-//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[56].second" );
+//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[56].second", 1 );
 //   if (returnValue  < 0. ) return -returnSum;
 //   returnSum += returnValue;
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(0)" );
@@ -640,9 +666,9 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
   showAll_ = showAll;
   verbose_ = verbose;
 
-  // Get trees
-  origEvents_ = ( TTree* )( TFile::Open( origFile )->Get( "Events" ) );
-  if ( !origEvents_ ) {
+  // Get files and trees
+  origFile_ = TFile::Open( origFile );
+  if ( !origFile_ ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> original file '" << origFile.Data() << "' could not be opened." << std::endl;
     return 1;
@@ -651,15 +677,31 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
     std::cout << "validatePatTuple INFO:" << std::endl;
     std::cout << "--> original file '" << origFile.Data() << "' opened." << std::endl;
   }
-  newEvents_  = ( TTree* )( TFile::Open( newFile )->Get( "Events" ) );
-  if ( !newEvents_ ) {
+  origEvents_ = ( TTree* )( origFile_->Get( "Events" ) );
+  if ( !origEvents_ ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> new file '" << newFile.Data() << "' could not be opened." << std::endl;
+    std::cout << "--> original tree 'Events' could not be read." << std::endl;
+    origFile_->Close();
+    return 1;
+  }
+  newFile_ = TFile::Open( newFile );
+  if ( !newFile_ ) {
+    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "--> new file '" << origFile.Data() << "' could not be opened." << std::endl;
+    origFile_->Close();
     return 1;
   }
   if ( verbose_ ) {
     std::cout << "validatePatTuple INFO:" << std::endl;
     std::cout << "--> new file '" << newFile.Data() << "' opened." << std::endl;
+  }
+  newEvents_  = ( TTree* )( TFile::Open( newFile )->Get( "Events" ) );
+  if ( !newEvents_ ) {
+    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "--> new tree 'Events' could not be read." << std::endl;
+    origFile_->Close();
+    newFile_->Close();
+    return 1;
   }
 
   // Normalisation
@@ -720,6 +762,9 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
     std::cout << "--> testID '" << testID << "' is not available." << std::endl;
     returnValue = -1.;
   }
+
+  origFile_->Close();
+  newFile_->Close();
 
   return returnValue;
 
