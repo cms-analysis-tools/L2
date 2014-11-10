@@ -190,8 +190,8 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
         TString mode( verbose_ ? "INFO" : "WARNING" );
         std::cout << "validatePatTuple " << mode.Data() << ":" << std::endl;
         std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
-        if ( iBin == 0 )                                     std::cout << " (underflow)";
-        else if ( iBin == diffHisto->GetBinContent( iBin ) ) std::cout << " (overflow)";
+        if ( iBin == 0 )                               std::cout << " (underflow)";
+        else if ( iBin == diffHisto->GetNbinsX() + 1 ) std::cout << " (overflow)";
         std::cout << std::endl;
       }
     }
