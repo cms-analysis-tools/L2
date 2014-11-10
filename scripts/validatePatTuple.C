@@ -3,7 +3,7 @@
 //
 // (inspirde by code from Slava and J.R.)
 //
-// e.g. > root -l '~/work/cms/CMSSW/L2/scripts/validatePatTuple.C+ ( "standard","patTuple_standard.orig.root","patTuple_standard.root" );'
+// e.g. > root -l '~/work/cms/CMSSW/L2/scripts/validatePatTuple.C+ ( "standard", "patTuple_standard.orig.root", "patTuple_standard.root" );'
 //
 
 
@@ -221,13 +221,13 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalDrivenMomentum().phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.trackIso()" );
+  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.trackIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalIso()" );
+  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.hcalIso()" );
+  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_@.size()" );
@@ -293,10 +293,10 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[8].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(0)" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(0)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(1)" );
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(1)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patMETs_patMETs__PAT.obj@.size()" );
@@ -323,13 +323,13 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.trackIso()" );
+  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.trackIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.ecalIso()" );
+  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.ecalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.hcalIso()" );
+  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj@.size()" );
@@ -344,13 +344,13 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.trackIso()" );
+  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.trackIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.ecalIso()" );
+  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.ecalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.hcalIso()" );
+  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj@.size()" );
@@ -365,13 +365,13 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.trackIso()" );
+  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.trackIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.ecalIso()" );
+  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.ecalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.hcalIso()" );
+  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   return returnSum;
@@ -606,19 +606,19 @@ Double_t plotVarAddBTaggings()
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[53].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[54].second", 1 );
-//   if (returnValue  < 0. ) return -returnSum;
-//   returnSum += returnValue;
-//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[55].second", 1 );
-//   if (returnValue  < 0. ) return -returnSum;
-//   returnSum += returnValue;
-//   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[56].second", 1 );
-//   if (returnValue  < 0. ) return -returnSum;
-//   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(0)" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[54].second", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(1)" );
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[55].second", 1 );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[56].second", 1 );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(0)", 1 );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(1)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   return returnSum;
