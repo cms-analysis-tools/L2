@@ -63,11 +63,17 @@ TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, 
   Float_t xMax( histoTmp->GetXaxis()->GetXmax() );
   if ( area > 0 ) {
     xMin = TMath::Max( 0., histoTmp->GetXaxis()->GetXmin() );
-    if ( histoTmp->GetXaxis()->GetXmin() == histoTmp->GetXaxis()->GetXmax() ) xMax = xMax + 1.;
+    if ( xMin >= xMax ) xMax = xMin + 1.;
   }
   else if (area < 0  ) {
     xMax =TMath::Min( histoTmp->GetXaxis()->GetXmax(), 0. );
-    if ( histoTmp->GetXaxis()->GetXmin() == histoTmp->GetXaxis()->GetXmax() ) xMin = xMin - 1.;
+    if ( xMin >= xMax ) xMin = xMax - 1.;
+  }
+  else {
+    if ( xMin >= xMax ) {
+      xMin = xMax - 0.5;
+      xMax = xMin + 1.;
+    }
   }
   Int_t nBins( histoTmp->GetNbinsX() );
   if ( nBins == 0 ) ++nBins;
@@ -109,11 +115,11 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   origHisto->SetLineColor( kRed );
   origHisto->SetFillColor( kYellow );
   origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
+  Bool_t origHistoFilled( origHisto->GetEntries() > 0 );
 
   // New histograms
   TString nameHistoNew( "new_" + name );
   TH1F* newHisto;
-  Bool_t origHistoFilled( origHisto->GetEntries() > 0 );
   if ( origHistoFilled ) {
     newHisto = new TH1F( nameHistoNew, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
   }
@@ -128,6 +134,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   }
   newHisto->SetLineColor( kBlue );
   newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
+  Bool_t newHistoFilled( newHisto->GetEntries() > 0 );
 
   // Plot
   TString titleDiffHisto;
@@ -135,6 +142,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   Float_t minDiffHisto;
   Float_t maxDiffHisto;
   if ( !origHistoFilled ) {
+    if ( !newHistoFilled ) newHisto->SetMaximum( 1. );
     newHisto->SetMinimum( -0.05 * newHisto->GetMaximum() );
     newHisto->Draw();
     origHisto->Draw( "Same" );
