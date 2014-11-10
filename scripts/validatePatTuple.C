@@ -79,9 +79,19 @@ Double_t plotVar( const TString& var, int area = 0 )
     delete canvas;
     return -1.;
   }
-  Int_t xMin( area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin() );
-  Int_t xMax( area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax() );
-  TH1F* origHisto( new TH1F( nameHistoOrig, origHistoTmp->GetTitle(), origHistoTmp->GetNbinsX(), xMin, xMax ) ); // Re-using nunmber of bins, regardless, if same range is used.
+  Float_t xMin( origHistoTmp->GetXaxis()->GetXmin() );
+  Float_t xMax( origHistoTmp->GetXaxis()->GetXmax() );
+  if ( area > 0 ) {
+    xMin = TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() );
+    if ( origHistoTmp->GetXaxis()->GetXmin() == origHistoTmp->GetXaxis()->GetXmax() ) xMax = xMax + 1.;
+  }
+  else if (area < 0  ) {
+    xMax =TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. );
+    if ( origHistoTmp->GetXaxis()->GetXmin() == origHistoTmp->GetXaxis()->GetXmax() ) xMin = xMin - 1.;
+  }
+  Int_t nBins( origHistoTmp->GetNbinsX() );
+  if ( nBins == 0 ) ++nBins;
+  TH1F* origHisto( new TH1F( nameHistoOrig, origHistoTmp->GetTitle(), nBins, xMin, xMax ) ); // Re-using nunmber of bins, regardless, if same range is used.
   origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
   if ( !origHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
@@ -110,9 +120,19 @@ Double_t plotVar( const TString& var, int area = 0 )
       delete canvas;
       return -1.;
     }
-    xMin = area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin();
-    xMax = area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax();
-    newHisto = new TH1F( nameHistoNew, newHistoTmp->GetTitle(), newHistoTmp->GetNbinsX(), xMin, xMax );
+    xMin = newHistoTmp->GetXaxis()->GetXmin();
+    xMax = newHistoTmp->GetXaxis()->GetXmax();
+    if ( area > 0 ) {
+      xMin = TMath::Max( 0., newHistoTmp->GetXaxis()->GetXmin() );
+      if ( newHistoTmp->GetXaxis()->GetXmin() == newHistoTmp->GetXaxis()->GetXmax() ) xMax = xMax + 1.;
+    }
+    else if (area < 0  ) {
+      xMax =TMath::Min( newHistoTmp->GetXaxis()->GetXmax(), 0. );
+      if ( newHistoTmp->GetXaxis()->GetXmin() == newHistoTmp->GetXaxis()->GetXmax() ) xMin = xMin - 1.;
+    }
+    nBins = newHistoTmp->GetNbinsX();
+    if ( nBins == 0 ) ++nBins;
+    newHisto = new TH1F( nameHistoNew, newHistoTmp->GetTitle(),nBins, xMin, xMax );
   }
   newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
   if ( !newHisto ) {
