@@ -48,7 +48,36 @@ void print()
 }
 
 
-Double_t plotVar( const TString& var, int area = 0 )
+TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, Int_t area = 0 )
+{
+  TH1F* histo = 0;
+  TString nameHistoTmp( nameHisto + "_tmp" );
+  events->Draw( var + ">>" + nameHistoTmp, "", "", nMax_ );
+  TH1F* histoTmp( ( TH1F* )gROOT->Get( nameHistoTmp ) );
+  if ( !histoTmp ) {
+    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "--> histogram '" << nameHistoTmp.Data() << "' could not be plotted." << std::endl;
+    return histo;
+  }
+  Float_t xMin( histoTmp->GetXaxis()->GetXmin() );
+  Float_t xMax( histoTmp->GetXaxis()->GetXmax() );
+  if ( area > 0 ) {
+    xMin = TMath::Max( 0., histoTmp->GetXaxis()->GetXmin() );
+    if ( histoTmp->GetXaxis()->GetXmin() == histoTmp->GetXaxis()->GetXmax() ) xMax = xMax + 1.;
+  }
+  else if (area < 0  ) {
+    xMax =TMath::Min( histoTmp->GetXaxis()->GetXmax(), 0. );
+    if ( histoTmp->GetXaxis()->GetXmin() == histoTmp->GetXaxis()->GetXmax() ) xMin = xMin - 1.;
+  }
+  Int_t nBins( histoTmp->GetNbinsX() );
+  if ( nBins == 0 ) ++nBins;
+  histo = new TH1F( nameHisto, histoTmp->GetTitle(), nBins, xMin, xMax ); // Re-using nunmber of bins, regardless, if same range is used.
+  delete histoTmp;
+  return histo;
+}
+
+
+Double_t plotVar( const TString& var, Int_t area = 0 )
 {
   // Create individual name
   TString name( var );
@@ -70,66 +99,42 @@ Double_t plotVar( const TString& var, int area = 0 )
 
   // Reference histograms
   TString nameHistoOrig( "orig_" + name );
-  TString nameHistoOrigTmp( nameHistoOrig + "_tmp" );
-  origEvents_->Draw( var + ">>" + nameHistoOrigTmp, "", "", nMax_ );
-  TH1F* origHistoTmp( ( TH1F* )gROOT->Get( nameHistoOrigTmp ) );
-  if ( !origHistoTmp ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoOrigTmp.Data() << "' could not be plotted." << std::endl;
-    delete canvas;
-    return -1.;
-  }
-  Int_t xMin( area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin() );
-  Int_t xMax( area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax() );
-  TH1F* origHisto( new TH1F( nameHistoOrig, origHistoTmp->GetTitle(), origHistoTmp->GetNbinsX(), xMin, xMax ) ); // Re-using nunmber of bins, regardless, if same range is used.
-  origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
+  TH1F* origHisto = createHisto( var, origEvents_, nameHistoOrig, area );
   if ( !origHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoOrig.Data() << "' could not be plotted." << std::endl;
+    std::cout << "--> histogram '" << nameHistoOrig.Data() << "' has not been created." << std::endl;
     delete canvas;
     return -1.;
   }
   origHisto->SetLineColor( kRed );
   origHisto->SetFillColor( kYellow );
-  delete origHistoTmp;
+  origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
 
   // New histograms
   TString nameHistoNew( "new_" + name );
-  TString nameHistoNewTmp( nameHistoNew + "_tmp" );
   TH1F* newHisto;
-  if ( origHisto->GetEntries() > 0 ) {
+  Bool_t origHistoFilled( origHisto->GetEntries() > 0 );
+  if ( origHistoFilled ) {
     newHisto = new TH1F( nameHistoNew, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
-    newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
   }
   else {
-    newEvents_->Draw( var + ">>" + nameHistoNewTmp, "", "", nMax_ );
-    TH1F* newHistoTmp( ( TH1F* )gROOT->Get( nameHistoNewTmp ) );
-    if ( !newHistoTmp ) {
-      std::cout << "validatePatTuple ERROR:" << std::endl;
-      std::cout << "--> histogram '" << nameHistoNewTmp.Data() << "' could not be plotted." << std::endl;
-      delete canvas;
-      return -1.;
-    }
-    xMin = area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin();
-    xMax = area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax();
-    newHisto = new TH1F( nameHistoNew, newHistoTmp->GetTitle(), newHistoTmp->GetNbinsX(), xMin, xMax );
+    newHisto = createHisto( var, newEvents_, nameHistoNew, area );
   }
-  newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
   if ( !newHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoNew.Data() << "' could not be plotted." << std::endl;
+    std::cout << "--> histogram '" << nameHistoNew.Data() << "' has not been created." << std::endl;
     delete canvas;
     return -1.;
   }
   newHisto->SetLineColor( kBlue );
+  newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
 
   // Plot
-  TH1F* newHistoTmp( ( TH1F* )gROOT->Get( nameHistoNewTmp ) );
   TString titleDiffHisto;
   Int_t binsDiffHisto;
   Float_t minDiffHisto;
   Float_t maxDiffHisto;
-  if ( newHistoTmp ) {
+  if ( !origHistoFilled ) {
     newHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
     newHisto->Draw();
     origHisto->Draw( "Same" );
@@ -156,7 +161,7 @@ Double_t plotVar( const TString& var, int area = 0 )
     delete canvas;
     return -1.;
   }
-  if ( !newHistoTmp ) diffHisto->Add( origHisto );
+  if ( origHistoFilled ) diffHisto->Add( origHisto );
   diffHisto->Add( newHisto, -1. );
   diffHisto->SetMarkerColor( kBlack );
   diffHisto->SetMarkerStyle( 7 );
@@ -167,7 +172,6 @@ Double_t plotVar( const TString& var, int area = 0 )
   leg->AddEntry( newHisto, "new", "L" );
   leg->AddEntry( diffHisto, "diff (orig-new)", "P" );
   leg->Draw();
-  if ( newHistoTmp ) delete newHistoTmp;
 
   // Check
   Double_t diff( 0. );
@@ -243,6 +247,9 @@ Double_t plotVarsStandard()
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_[3].second" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_[4].second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patJets_selectedPatJets__PAT.obj@.size()" );
@@ -363,15 +370,6 @@ Double_t plotVarsStandard()
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.phi()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.trackIso()", 1 );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.ecalIso()", 1 );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   return returnSum;
