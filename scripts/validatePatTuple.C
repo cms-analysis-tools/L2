@@ -174,7 +174,9 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   diffHisto->SetMarkerColor( kBlack );
   diffHisto->SetMarkerStyle( 7 );
   diffHisto->SetLineColor( kBlack );
-  diffHisto->Draw( "P Same" );
+  diffHisto->SetFillColor( kRed );
+  diffHisto->SetFillStyle( 3004 );
+  diffHisto->Draw( "HP Same" );
   TLegend * leg = new TLegend( 0.65, 0.8, 0.89, 0.89 );
   leg->AddEntry( origHisto, "orig" );
   leg->AddEntry( newHisto, "new", "L" );
