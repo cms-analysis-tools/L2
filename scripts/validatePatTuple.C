@@ -135,7 +135,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   Float_t minDiffHisto;
   Float_t maxDiffHisto;
   if ( !origHistoFilled ) {
-    newHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
+    newHisto->SetMinimum( -0.05 * newHisto->GetMaximum() );
     newHisto->Draw();
     origHisto->Draw( "Same" );
     newHisto->Draw( "Same" );
