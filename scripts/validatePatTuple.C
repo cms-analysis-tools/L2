@@ -170,7 +170,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     return -1.;
   }
   if ( origHistoFilled ) diffHisto->Add( origHisto );
-  diffHisto->Add( newHisto, -1. );
+  if ( newHistoFilled )  diffHisto->Add( newHisto, -1. );
   diffHisto->SetMarkerColor( kBlack );
   diffHisto->SetMarkerStyle( 7 );
   diffHisto->SetLineColor( kBlack );
@@ -178,9 +178,15 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   diffHisto->SetFillStyle( 3004 );
   diffHisto->Draw( "HP Same" );
   TLegend * leg = new TLegend( 0.65, 0.8, 0.89, 0.89 );
-  leg->AddEntry( origHisto, "orig" );
-  leg->AddEntry( newHisto, "new", "L" );
-  leg->AddEntry( diffHisto, "diff (orig-new)", "P" );
+  TString legOrigTxt( "orig (" );
+  legOrigTxt += origHisto->GetEntries();
+  legOrigTxt += " entries)";
+  leg->AddEntry( origHisto, legOrigTxt, "F" );
+  TString legNewTxt( "new (" );
+  legNewTxt += newHisto->GetEntries();
+  legNewTxt += " entries)";
+  leg->AddEntry( newHisto, legNewTxt, "L" );
+  leg->AddEntry( diffHisto, "diff (orig-new)", "FP" );
   leg->Draw();
 
   // Check
@@ -198,7 +204,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
       }
     }
   }
-  if ( diff != 0. ) {
+  if ( diff != 0. || origHisto->GetEntries() != newHisto->GetEntries() ) {
     std::cout << "validatePatTuple WARNING:" << std::endl;
     std::cout << "--> variable '" << var.Data() << "' has differences." << std::endl;
   }
