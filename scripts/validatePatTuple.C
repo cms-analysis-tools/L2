@@ -65,7 +65,7 @@ Double_t plotVar( const TString& var, int area = 0 )
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoOrigTmp.Data() << "' could not be plotted." << std::endl;
     delete canvas;
-    return -1;
+    return -1.;
   }
   Int_t xMin( area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin() );
   Int_t xMax( area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax() );
@@ -75,7 +75,7 @@ Double_t plotVar( const TString& var, int area = 0 )
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoOrig.Data() << "' could not be plotted." << std::endl;
     delete canvas;
-    return -1;
+    return -1.;
   }
   origHisto->SetLineColor( kRed );
   origHisto->SetFillColor( kYellow );
@@ -83,39 +83,79 @@ Double_t plotVar( const TString& var, int area = 0 )
 
   // New histograms
   TString nameHistoNew( "new_" + name );
-  TH1F* newHisto( new TH1F( nameHistoNew, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() ) );
+  TString nameHistoNewTmp( nameHistoNew + "_tmp" );
+  TH1F* newHisto;
+  if ( origHisto->GetEntries() > 0 ) {
+    newHisto = new TH1F( nameHistoNew, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
+    newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
+  }
+  else {
+    newEvents_->Draw( var + ">>" + nameHistoNewTmp, "", "", nMax_ );
+    TH1F* newHistoTmp( ( TH1F* )gROOT->Get( nameHistoNewTmp ) );
+    if ( !newHistoTmp ) {
+      std::cout << "validatePatTuple ERROR:" << std::endl;
+      std::cout << "--> histogram '" << nameHistoNewTmp.Data() << "' could not be plotted." << std::endl;
+      delete canvas;
+      return -1.;
+    }
+    xMin = area > 0 ? TMath::Max( 0., origHistoTmp->GetXaxis()->GetXmin() ) : origHistoTmp->GetXaxis()->GetXmin();
+    xMax = area < 0 ? TMath::Min( origHistoTmp->GetXaxis()->GetXmax(), 0. ) : origHistoTmp->GetXaxis()->GetXmax();
+    newHisto = new TH1F( nameHistoNew, newHistoTmp->GetTitle(), newHistoTmp->GetNbinsX(), xMin, xMax );
+  }
   newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
   if ( !newHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoNew.Data() << "' could not be plotted." << std::endl;
     delete canvas;
-    return -1;
+    return -1.;
   }
   newHisto->SetLineColor( kBlue );
 
   // Plot
-  origHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
-  origHisto->Draw();
-  newHisto->Draw( "Same" );
+  TH1F* newHistoTmp( ( TH1F* )gROOT->Get( nameHistoNewTmp ) );
+  TString titleDiffHisto;
+  Int_t binsDiffHisto;
+  Float_t minDiffHisto;
+  Float_t maxDiffHisto;
+  if ( newHistoTmp ) {
+    newHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
+    newHisto->Draw();
+    origHisto->Draw( "Same" );
+    newHisto->Draw( "Same" );
+    titleDiffHisto = newHisto->GetTitle();
+    binsDiffHisto  = newHisto->GetNbinsX();
+    minDiffHisto   = newHisto->GetXaxis()->GetXmin();
+    maxDiffHisto   = newHisto->GetXaxis()->GetXmax();
+  }
+  else {
+    origHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
+    origHisto->Draw();
+    newHisto->Draw( "Same" );
+    titleDiffHisto = origHisto->GetTitle();
+    binsDiffHisto  = origHisto->GetNbinsX();
+    minDiffHisto   = origHisto->GetXaxis()->GetXmin();
+    maxDiffHisto   = origHisto->GetXaxis()->GetXmax();
+  }
   TString nameDiffHist( "diff_" + name );
-  TH1F* diffHisto( new TH1F( nameDiffHist, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() ) );
+  TH1F* diffHisto( new TH1F( nameDiffHist, titleDiffHisto, binsDiffHisto, minDiffHisto, maxDiffHisto ) );
   if ( !diffHisto ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameDiffHist.Data() << "' could not be plotted." << std::endl;
     delete canvas;
-    return -1;
+    return -1.;
   }
-  diffHisto->Add( origHisto );
+  if ( !newHistoTmp ) diffHisto->Add( origHisto );
   diffHisto->Add( newHisto, -1. );
   diffHisto->SetMarkerColor( kBlack );
   diffHisto->SetMarkerStyle( 7 );
   diffHisto->SetLineColor( kBlack );
   diffHisto->Draw( "P Same" );
-  TLegend * leg = new TLegend( 0.75, 0.9, 0.99, 0.99 );
+  TLegend * leg = new TLegend( 0.65, 0.8, 0.89, 0.89 );
   leg->AddEntry( origHisto, "orig" );
   leg->AddEntry( newHisto, "new", "L" );
   leg->AddEntry( diffHisto, "diff (orig-new)", "P" );
   leg->Draw();
+  if ( newHistoTmp ) delete newHistoTmp;
 
   // Check
   Double_t diff( 0. );
@@ -134,7 +174,7 @@ Double_t plotVar( const TString& var, int area = 0 )
   }
   if ( diff != 0. ) {
     std::cout << "validatePatTuple WARNING:" << std::endl;
-    std::cout << "--> variable '" << var.Data() << "' has differences in bins" << std::endl;
+    std::cout << "--> variable '" << var.Data() << "' has differences." << std::endl;
   }
   else if ( !showAll_ ) {
     delete canvas;
