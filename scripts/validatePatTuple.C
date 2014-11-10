@@ -36,6 +36,18 @@ TTree* newEvents_  = 0;
 Int_t nMax_ = 0;
 
 
+void print()
+{
+  // Save plots
+  const TSeqCollection* canvases = gROOT->GetListOfCanvases();
+  for ( Int_t iCanvas = 0 ; iCanvas != canvases->GetSize(); ++iCanvas ){
+    TString namePlot( canvases->At( iCanvas )->GetName() );
+    namePlot.Append( ".png" );
+    canvases->At( iCanvas )->Print( namePlot );
+  }
+}
+
+
 Double_t plotVar( const TString& var, int area = 0 )
 {
   // Create individual name
@@ -805,6 +817,8 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
 
   origFile_->Close();
   newFile_->Close();
+
+  print();
 
   return returnValue;
 
