@@ -103,7 +103,7 @@ Double_t plotVar( const TString& var )
 
   // Check
   Double_t diff( 0. );
-  for ( Int_t iBin = 0; iBin <= diffHisto->GetNbinsX(); ++iBin ) {
+  for ( Int_t iBin = 0; iBin <= diffHisto->GetNbinsX() + 1; ++iBin ) {
     diff += std::fabs( diffHisto->GetBinContent( iBin ) );
   }
   if ( diff != 0. ) {
