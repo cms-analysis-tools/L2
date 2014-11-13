@@ -3,7 +3,7 @@
 //
 // (inspirde by code from Slava and J.R.)
 //
-// e.g. > root -l '~/work/cms/CMSSW/L2/scripts/validatePatTuple.C+ ( "standard", "patTuple_standard.orig.root", "patTuple_standard.root" );'
+// e.g. > root -l '~/work/cms/CMSSW/L2/scripts/validatePatMiniAOD.C+ ( "standard", "pattMiniAOD_standard.orig.root", "pattMiniAOD_standard.root" );'
 //
 
 
@@ -56,7 +56,7 @@ TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, 
   events->Draw( var + ">>" + nameHistoTmp, "", "", nMax_ );
   TH1F* histoTmp( ( TH1F* )gROOT->Get( nameHistoTmp ) );
   if ( !histoTmp ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoTmp.Data() << "' could not be plotted." << std::endl;
     return histo;
   }
@@ -100,7 +100,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   TCanvas* canvas( new TCanvas( nameCanvas, var ) );
   canvas->SetGrid();
   if ( verbose_ ) {
-    std::cout << "validatePatTuple INFO:" << std::endl;
+    std::cout << "validatePatMiniAOD INFO:" << std::endl;
     std::cout << "--> canvas '" << nameCanvas.Data() << "' created." << std::endl;
   }
 
@@ -108,7 +108,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   TString nameHistoOrig( "orig_" + name );
   TH1F* origHisto = createHisto( var, origEvents_, nameHistoOrig, area );
   if ( !origHisto ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoOrig.Data() << "' has not been created." << std::endl;
     delete canvas;
     return -1.;
@@ -128,7 +128,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     newHisto = createHisto( var, newEvents_, nameHistoNew, area );
   }
   if ( !newHisto ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameHistoNew.Data() << "' has not been created." << std::endl;
     delete canvas;
     return -1.;
@@ -165,7 +165,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   TString nameDiffHist( "diff_" + name );
   TH1F* diffHisto( new TH1F( nameDiffHist, titleDiffHisto, binsDiffHisto, minDiffHisto, maxDiffHisto ) );
   if ( !diffHisto ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameDiffHist.Data() << "' could not be plotted." << std::endl;
     delete canvas;
     return -1.;
@@ -197,7 +197,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     if ( std::fabs( diffHisto->GetBinContent( iBin ) ) != 0. ) {
       if ( iBin == 0 || iBin == diffHisto->GetBinContent( iBin ) || verbose_ ) {
         TString mode( verbose_ ? "INFO" : "WARNING" );
-        std::cout << "validatePatTuple " << mode.Data() << ":" << std::endl;
+        std::cout << "validatePatMiniAOD " << mode.Data() << ":" << std::endl;
         std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
         if ( iBin == 0 )                               std::cout << " (underflow)";
         else if ( iBin == diffHisto->GetNbinsX() + 1 ) std::cout << " (overflow)";
@@ -206,7 +206,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     }
   }
   if ( diff != 0. || origHisto->GetEntries() != newHisto->GetEntries() ) {
-    std::cout << "validatePatTuple WARNING:" << std::endl;
+    std::cout << "validatePatMiniAOD WARNING:" << std::endl;
     std::cout << "--> variable '" << var.Data() << "' has differences." << std::endl;
   }
   else if ( !showAll_ ) {
@@ -221,176 +221,290 @@ Double_t plotVarsStandard()
 {
   Double_t returnSum( 0. );
   Double_t returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj@.size()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.pt()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.eta()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.phi()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalDrivenMomentum().pt()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.ecalDrivenMomentum().pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalDrivenMomentum().eta()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.ecalDrivenMomentum().eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalDrivenMomentum().phi()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.ecalDrivenMomentum().phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.trackIso()", 1 );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.trackIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.ecalIso()", 1 );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.ecalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.hcalIso()", 1 );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_@.size()" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.electronIDs_@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_.second" );
+  returnValue = plotVar( "patElectrons_slimmedElectrons__PAT.obj.electronIDs_.second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  for ( Int_t iID = 0; iID < 5; ++iID ) {
-    TString varExp( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_[" );
+  for ( Int_t iID = 0; iID < 15; ++iID ) {
+    TString varExp( "patElectrons_slimmedElectrons__PAT.obj.electronIDs_[" );
     varExp += iID;
     varExp += "].second";
     returnValue = plotVar( varExp, 1 );
     if (returnValue  < 0. ) return -returnSum;
     returnSum += returnValue;
   }
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj@.size()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pt()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.eta()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.phi()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.partonFlavour()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.partonFlavour()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.hadronFlavour()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.hadronFlavour()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_@.size()" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.pairDiscriVector_@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_.second" );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.pairDiscriVector_.second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   for ( Int_t iDiscr = 0; iDiscr < 9; ++iDiscr ) {
-    TString varExp( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_[" );
+    TString varExp( "patJets_slimmedJets__PAT.obj.pairDiscriVector_[" );
     varExp += iDiscr;
     varExp += "].second";
     returnValue = plotVar( varExp, 1 );
     if (returnValue  < 0. ) return -returnSum;
     returnSum += returnValue;
   }
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(0)", 1 );
+  returnValue = plotVar( "patJets_slimmedJets__PAT.obj.jecFactor(0)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.jecFactor(1)", 1 );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMETs_patMETs__PAT.obj@.size()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMETs_patMETs__PAT.obj.pt()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMETs_patMETs__PAT.obj.eta()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMETs_patMETs__PAT.obj.phi()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.partonFlavour()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj@.size()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.hadronFlavour()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.pt()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.pairDiscriVector_@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.eta()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.pairDiscriVector_.second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.phi()" );
+  returnValue = plotVar( "patJets_slimmedJetsAK8__PAT.obj.jecFactor(0)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.trackIso()", 1 );
+  returnValue = plotVar( "patMETs_slimmedMETs__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.ecalIso()", 1 );
+  returnValue = plotVar( "patMETs_slimmedMETs__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patMuons_selectedPatMuons__PAT.obj.hcalIso()", 1 );
+  returnValue = plotVar( "patMETs_slimmedMETs__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj@.size()" );
+  returnValue = plotVar( "patMETs_slimmedMETs__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.pt()" );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.eta()" );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.phi()" );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.trackIso()", 1 );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.ecalIso()", 1 );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj.trackIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPhotons_selectedPatPhotons__PAT.obj.hcalIso()", 1 );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj.ecalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj@.size()" );
+  returnValue = plotVar( "patMuons_slimmedMuons__PAT.obj.hcalIso()", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.pt()" );
+  returnValue = plotVar( "patPackedCandidates_lostTracks__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.eta()" );
+  returnValue = plotVar( "patPackedCandidates_lostTracks__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.phi()" );
+  returnValue = plotVar( "patPackedCandidates_lostTracks__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj@.size()" );
+  returnValue = plotVar( "patPackedCandidates_lostTracks__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.pt()" );
+  returnValue = plotVar( "patPackedCandidates_packedPFCandidates__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.eta()" );
+  returnValue = plotVar( "patPackedCandidates_packedPFCandidates__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.phi()" );
+  returnValue = plotVar( "patPackedCandidates_packedPFCandidates__PAT.obj.eta()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj@.size()" );
+  returnValue = plotVar( "patPackedCandidates_packedPFCandidates__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj.pt()" );
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj.eta()" );
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.pt()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj.phi()" );
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.pdgId()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.status()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj.trackIso()", 1 );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj.ecalIso()", 1 );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj.hcalIso()", 1 );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTaus_slimmedTaus__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTaus_slimmedTaus__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTaus_slimmedTaus__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTaus_slimmedTaus__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.triggerObjectTypes_" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.filterLabels_@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.pathIndices_" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.pathLastFilterAccepted_" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patTriggerObjectStandAlones_selectedPatTrigger__PAT.obj.pathL3FilterAccepted_" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoCATopJetTagInfos_caTopTagInfos__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoCATopJetTagInfos_caTopTagInfos__PAT.obj.properties_.nSubJets" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoCATopJetTagInfos_caTopTagInfos__PAT.obj.properties_.minMass" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoCATopJetTagInfos_caTopTagInfos__PAT.obj.properties_.topMass" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoCATopJetTagInfos_caTopTagInfos__PAT.obj.properties_.wMass" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_slimmedGenJets__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_slimmedGenJets__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_slimmedGenJets__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_slimmedGenJets__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenParticles_prunedGenParticles__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenParticles_prunedGenParticles__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenParticles_prunedGenParticles__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenParticles_prunedGenParticles__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenParticles_prunedGenParticles__PAT.obj.pdgId()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenParticles_prunedGenParticles__PAT.obj.status()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   return returnSum;
@@ -408,215 +522,7 @@ Double_t plotVarsData()
 }
 
 
-Double_t plotVarsPF2PAT()
-{
-  Double_t returnSum( 0. );
-//   Double_t returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarsPATandPF2PAT()
-{
-  Double_t returnSum( 0. );
-//   Double_t returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarsAddDecayInFlight()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarAddBTaggings()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj@.size()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pt()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.eta()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.phi()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.partonFlavour()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.hadronFlavour()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_@.size()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_.second" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  for ( Int_t iDiscr = 0; iDiscr < 57; ++iDiscr ) {
-    TString varExp( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[" );
-    varExp += iDiscr;
-    varExp += "].second";
-    returnValue = plotVar( varExp, 1 );
-    if (returnValue  < 0. ) return -returnSum;
-    returnSum += returnValue;
-  }
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(0)", 1 );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(1)", 1 );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarsAddJets()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
- return returnSum;
-}
-
-
-Double_t plotVarsAddTracks()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return 0.;
-}
-
-
-Int_t plotVarsAddTriggerInfo()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarsAddVertexInfo()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarsFastsim()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return returnSum;
-}
-
-
-Double_t plotVarsTopSelection()
-{
-  Double_t returnSum( 0. );
-//   Double_t returnValue;
-  return returnSum;
-}
-
-
-
-Double_t plotVarsUserData()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  return returnSum;
-}
-
-
-
-Double_t plotVarsMetUncertainties()
-{
-  Double_t returnSum( 0. );
-  Double_t returnValue;
-  returnValue = plotVarsStandard();
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  std::vector< TString > collTags;
-  collTags.push_back( TString( "patElectrons_shiftedPatElectronsEnDown__PAT" ) );
-  collTags.push_back( TString( "patElectrons_shiftedPatElectronsEnUp__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2Corr__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrEnDown__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrEnUp__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrOriginalReserved__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrResDown__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrResUp__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype2Corr__PAT" ) );
-  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype2CorrOriginalReserved__PAT" ) );
-  collTags.push_back( TString( "patJets_shiftedPatJetsEnDown__PAT" ) );
-  collTags.push_back( TString( "patJets_shiftedPatJetsEnDownForRawMEt__PAT" ) );
-  collTags.push_back( TString( "patJets_shiftedPatJetsEnUp__PAT" ) );
-  collTags.push_back( TString( "patJets_shiftedPatJetsEnUpForRawMEt__PAT" ) );
-  collTags.push_back( TString( "patJets_smearedPatJets__PAT" ) );
-  collTags.push_back( TString( "patJets_smearedPatJetsResDown__PAT" ) );
-  collTags.push_back( TString( "patJets_smearedPatJetsResUp__PAT" ) );
-  collTags.push_back( TString( "patMuons_shiftedPatMuonsEnDown__PAT" ) );
-  collTags.push_back( TString( "patMuons_shiftedPatMuonsEnUp__PAT" ) );
-  collTags.push_back( TString( "patTaus_shiftedPatTausEnDown__PAT" ) );
-  collTags.push_back( TString( "patTaus_shiftedPatTausEnUp__PAT" ) );
-  collTags.push_back( TString( "patTaus_shiftedPatTausEnUp__PAT" ) );
-  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype1p2Corr_genJets_PAT" ) );
-  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype1p2CorrOriginalReserved_genJets_PAT" ) );
-  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype2Corr_genJets_PAT" ) );
-  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype2CorrOriginalReserved_genJets_PAT" ) );
-  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype1p2Corr_pfCandidates_PAT" ) );
-  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype1p2CorrOriginalReserved_pfCandidates_PAT" ) );
-  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype2Corr_pfCandidates_PAT" ) );
-  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype2CorrOriginalReserved_pfCandidates_PAT" ) );
-  for ( size_t iTag = 0; iTag < collTags.size(); ++iTag ) {
-    returnValue = plotVar( TString( collTags[ iTag ] + ".obj@.size()" ) );
-    if (returnValue  < 0. ) return -returnSum;
-    returnSum += returnValue;
-    returnValue = plotVar( TString( collTags[ iTag ] + ".obj.pt()" ) );
-    if (returnValue  < 0. ) return -returnSum;
-    returnSum += returnValue;
-    returnValue = plotVar( TString( collTags[ iTag ] + ".obj.eta()" ) );
-    if (returnValue  < 0. ) return -returnSum;
-    returnSum += returnValue;
-    returnValue = plotVar( TString( collTags[ iTag ] + ".obj.phi()" ) );
-    if (returnValue  < 0. ) return -returnSum;
-    returnSum += returnValue;
-  }
-  return returnSum;
-}
-
-
-Double_t validatePatTuple( const TString testID, const TString origFile, const TString newFile, bool showAll = false, bool verbose = false )
+Double_t validatePatMiniAOD( const TString testID, const TString origFile, const TString newFile, bool showAll = false, bool verbose = false )
 {
   // Parameters
   showAll_ = showAll;
@@ -625,35 +531,35 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
   // Get files and trees
   origFile_ = TFile::Open( origFile );
   if ( !origFile_ ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> original file '" << origFile.Data() << "' could not be opened." << std::endl;
     return 1;
   }
   if ( verbose_ ) {
-    std::cout << "validatePatTuple INFO:" << std::endl;
+    std::cout << "validatePatMiniAOD INFO:" << std::endl;
     std::cout << "--> original file '" << origFile.Data() << "' opened." << std::endl;
   }
   origEvents_ = ( TTree* )( origFile_->Get( "Events" ) );
   if ( !origEvents_ ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> original tree 'Events' could not be read." << std::endl;
     origFile_->Close();
     return 1;
   }
   newFile_ = TFile::Open( newFile );
   if ( !newFile_ ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> new file '" << origFile.Data() << "' could not be opened." << std::endl;
     origFile_->Close();
     return 1;
   }
   if ( verbose_ ) {
-    std::cout << "validatePatTuple INFO:" << std::endl;
+    std::cout << "validatePatMiniAOD INFO:" << std::endl;
     std::cout << "--> new file '" << newFile.Data() << "' opened." << std::endl;
   }
   newEvents_  = ( TTree* )( TFile::Open( newFile )->Get( "Events" ) );
   if ( !newEvents_ ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> new tree 'Events' could not be read." << std::endl;
     origFile_->Close();
     newFile_->Close();
@@ -677,44 +583,8 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
 //   else if ( testID == "data" ) {
 //     returnValue =plotVarsData();
 //   }
-  else if ( testID == "PF2PAT" ) {
-    returnValue =plotVarsPF2PAT();
-  }
-//   else if ( testID == "PATandPF2PAT" ) { // repeats "standard" and "PF2PAT"
-//     returnValue =plotVarsPATandPF2PAT();
-//   }
-  else if ( testID == "addDecayInFlight" ) {
-    returnValue =plotVarsAddDecayInFlight();
-  }
-  else if ( testID == "addBTagging" ) {
-    returnValue =plotVarAddBTaggings();
-  }
-  else if ( testID == "addJets" ) {
-    returnValue =plotVarsAddJets();
-  }
-  else if ( testID == "addTracks" ) {
-    returnValue =plotVarsAddTracks();
-  }
-  else if ( testID == "addTriggerInfo" ) {
-    returnValue =plotVarsAddTriggerInfo();
-  }
-  else if ( testID == "addVertexInfo" ) {
-    returnValue =plotVarsAddVertexInfo();
-  }
-  else if ( testID == "fastsim" ) {
-    returnValue =plotVarsFastsim();
-  }
-//   else if ( testID == "topSelection" ) {
-//     returnValue =plotVarsTopSelection();
-//   }
-//   else if ( testID == "userData" ) {
-//     returnValue =plotVarsUserData();
-//   }
-  else if ( testID == "metUncertainties" ) {
-    returnValue =plotVarsMetUncertainties();
-  }
   else {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> testID '" << testID << "' is not available." << std::endl;
     returnValue = -1.;
   }
