@@ -253,6 +253,9 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
+  returnValue = plotVar( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_.second" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
   for ( Int_t iID = 0; iID < 5; ++iID ) {
     TString varExp( "patElectrons_selectedPatElectrons__PAT.obj.electronIDs_[" );
     varExp += iID;
@@ -280,6 +283,9 @@ Double_t plotVarsStandard()
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJets__PAT.obj.pairDiscriVector_.second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   for ( Int_t iDiscr = 0; iDiscr < 9; ++iDiscr ) {
@@ -362,6 +368,30 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
   return returnSum;
 }
 
@@ -430,6 +460,9 @@ Double_t plotVarAddBTaggings()
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_.second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   for ( Int_t iDiscr = 0; iDiscr < 57; ++iDiscr ) {
@@ -533,6 +566,51 @@ Double_t plotVarsMetUncertainties()
   returnValue = plotVarsStandard();
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
+  std::vector< TString > collTags;
+  collTags.push_back( TString( "patElectrons_shiftedPatElectronsEnDown__PAT" ) );
+  collTags.push_back( TString( "patElectrons_shiftedPatElectronsEnUp__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2Corr__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrEnDown__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrEnUp__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrOriginalReserved__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrResDown__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype1p2CorrResUp__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype2Corr__PAT" ) );
+  collTags.push_back( TString( "patJets_selectedPatJetsForMETtype2CorrOriginalReserved__PAT" ) );
+  collTags.push_back( TString( "patJets_shiftedPatJetsEnDown__PAT" ) );
+  collTags.push_back( TString( "patJets_shiftedPatJetsEnDownForRawMEt__PAT" ) );
+  collTags.push_back( TString( "patJets_shiftedPatJetsEnUp__PAT" ) );
+  collTags.push_back( TString( "patJets_shiftedPatJetsEnUpForRawMEt__PAT" ) );
+  collTags.push_back( TString( "patJets_smearedPatJets__PAT" ) );
+  collTags.push_back( TString( "patJets_smearedPatJetsResDown__PAT" ) );
+  collTags.push_back( TString( "patJets_smearedPatJetsResUp__PAT" ) );
+  collTags.push_back( TString( "patMuons_shiftedPatMuonsEnDown__PAT" ) );
+  collTags.push_back( TString( "patMuons_shiftedPatMuonsEnUp__PAT" ) );
+  collTags.push_back( TString( "patTaus_shiftedPatTausEnDown__PAT" ) );
+  collTags.push_back( TString( "patTaus_shiftedPatTausEnUp__PAT" ) );
+  collTags.push_back( TString( "patTaus_shiftedPatTausEnUp__PAT" ) );
+  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype1p2Corr_genJets_PAT" ) );
+  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype1p2CorrOriginalReserved_genJets_PAT" ) );
+  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype2Corr_genJets_PAT" ) );
+  collTags.push_back( TString( "recoGenJets_selectedPatJetsForMETtype2CorrOriginalReserved_genJets_PAT" ) );
+  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype1p2Corr_pfCandidates_PAT" ) );
+  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype1p2CorrOriginalReserved_pfCandidates_PAT" ) );
+  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype2Corr_pfCandidates_PAT" ) );
+  collTags.push_back( TString( "recoPFCandidates_selectedPatJetsForMETtype2CorrOriginalReserved_pfCandidates_PAT" ) );
+  for ( size_t iTag = 0; iTag < collTags.size(); ++iTag ) {
+    returnValue = plotVar( TString( collTags[ iTag ] + ".obj@.size()" ) );
+    if (returnValue  < 0. ) return -returnSum;
+    returnSum += returnValue;
+    returnValue = plotVar( TString( collTags[ iTag ] + ".obj.pt()" ) );
+    if (returnValue  < 0. ) return -returnSum;
+    returnSum += returnValue;
+    returnValue = plotVar( TString( collTags[ iTag ] + ".obj.eta()" ) );
+    if (returnValue  < 0. ) return -returnSum;
+    returnSum += returnValue;
+    returnValue = plotVar( TString( collTags[ iTag ] + ".obj.phi()" ) );
+    if (returnValue  < 0. ) return -returnSum;
+    returnSum += returnValue;
+  }
   return returnSum;
 }
 
