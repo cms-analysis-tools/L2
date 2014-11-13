@@ -217,7 +217,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
 }
 
 
-Double_t plotVarsStandard()
+Double_t plotVarsCommon()
 {
   Double_t returnSum( 0. );
   Double_t returnValue;
@@ -384,24 +384,6 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patPackedCandidates_packedPFCandidates__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj@.size()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.pt()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.eta()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.phi()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.pdgId()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.status()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
   returnValue = plotVar( "patPhotons_slimmedPhotons__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
@@ -477,6 +459,32 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "recoCATopJetTagInfos_caTopTagInfos__PAT.obj.properties_.wMass" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
+  return returnSum;
+}
+
+
+Double_t plotVarsMC()
+{
+  Double_t returnSum( 0. );
+  Double_t returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.pdgId()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patPackedGenParticles_packedGenParticles__PAT.obj.status()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
   returnValue = plotVar( "recoGenJets_slimmedGenJets__PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
@@ -511,11 +519,25 @@ Double_t plotVarsStandard()
 }
 
 
+Double_t plotVarsStandard()
+{
+  Double_t returnSum( 0. );
+  Double_t returnValue;
+  returnValue = plotVarsCommon();
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVarsMC();
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  return returnSum;
+}
+
+
 Double_t plotVarsData()
 {
   Double_t returnSum( 0. );
   Double_t returnValue;
-  returnValue = plotVarsStandard();
+  returnValue = plotVarsCommon();
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   return returnSum;

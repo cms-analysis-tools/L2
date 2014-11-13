@@ -217,7 +217,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
 }
 
 
-Double_t plotVarsStandard()
+Double_t plotVarsCommon()
 {
   Double_t returnSum( 0. );
   Double_t returnValue;
@@ -369,18 +369,6 @@ Double_t plotVarsStandard()
   returnValue = plotVar( "patTaus_selectedPatTaus__PAT.obj.phi()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj@.size()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.pt()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.eta()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
-  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.phi()" );
-  if (returnValue  < 0. ) return -returnSum;
-  returnSum += returnValue;
   returnValue = plotVar( "recoPFCandidates_selectedPatJets_pfCandidates_PAT.obj@.size()" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
@@ -397,11 +385,45 @@ Double_t plotVarsStandard()
 }
 
 
+Double_t plotVarsMC()
+{
+  Double_t returnSum( 0. );
+  Double_t returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "recoGenJets_selectedPatJets_genJets_PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  return returnSum;
+}
+
+
+Double_t plotVarsStandard()
+{
+  Double_t returnSum( 0. );
+  Double_t returnValue;
+  returnValue = plotVarsCommon();
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVarsMC();
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  return returnSum;
+}
+
+
 Double_t plotVarsData()
 {
   Double_t returnSum( 0. );
   Double_t returnValue;
-  returnValue = plotVarsStandard();
+  returnValue = plotVarsCommon();
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
   return returnSum;
