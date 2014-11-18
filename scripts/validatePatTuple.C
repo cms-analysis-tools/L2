@@ -31,9 +31,9 @@
 bool showAll_ = false;
 bool verbose_ = false;
 TFile* origFile_ = 0;
-TFile* newFile_  = 0;
+TFile* file_     = 0;
 TTree* origEvents_ = 0;
-TTree* newEvents_  = 0;
+TTree* events_     = 0;
 Int_t nMax_ = 0;
 
 
@@ -104,7 +104,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     std::cout << "--> canvas '" << nameCanvas.Data() << "' created." << std::endl;
   }
 
-  // Reference histograms
+  // Reference histogram
   TString nameHistoOrig( "orig_" + name );
   TH1F* origHisto = createHisto( var, origEvents_, nameHistoOrig, area );
   if ( !origHisto ) {
@@ -118,24 +118,24 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
   Bool_t origHistoFilled( origHisto->GetEntries() > 0 );
 
-  // New histograms
-  TString nameHistoNew( "new_" + name );
-  TH1F* newHisto;
+  // Histograms
+  TString nameHisto( name );
+  TH1F* histo;
   if ( origHistoFilled ) {
-    newHisto = new TH1F( nameHistoNew, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
+    histo = new TH1F( nameHisto, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
   }
   else {
-    newHisto = createHisto( var, newEvents_, nameHistoNew, area );
+    histo = createHisto( var, events_, nameHisto, area );
   }
-  if ( !newHisto ) {
+  if ( !histo ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoNew.Data() << "' has not been created." << std::endl;
+    std::cout << "--> histogram '" << nameHisto.Data() << "' has not been created." << std::endl;
     delete canvas;
     return -1.;
   }
-  newHisto->SetLineColor( kBlue );
-  newEvents_->Draw( var + ">>" + nameHistoNew, "", "", nMax_ );
-  Bool_t newHistoFilled( newHisto->GetEntries() > 0 );
+  histo->SetLineColor( kBlue );
+  events_->Draw( var + ">>" + nameHisto, "", "", nMax_ );
+  Bool_t histoFilled( histo->GetEntries() > 0 );
 
   // Plot
   TString titleDiffHisto;
@@ -143,20 +143,20 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   Float_t minDiffHisto;
   Float_t maxDiffHisto;
   if ( !origHistoFilled ) {
-    if ( !newHistoFilled ) newHisto->SetMaximum( 1. );
-    newHisto->SetMinimum( -0.05 * newHisto->GetMaximum() );
-    newHisto->Draw();
+    if ( !histoFilled ) histo->SetMaximum( 1. );
+    histo->SetMinimum( -0.05 * histo->GetMaximum() );
+    histo->Draw();
     origHisto->Draw( "Same" );
-    newHisto->Draw( "Same" );
-    titleDiffHisto = newHisto->GetTitle();
-    binsDiffHisto  = newHisto->GetNbinsX();
-    minDiffHisto   = newHisto->GetXaxis()->GetXmin();
-    maxDiffHisto   = newHisto->GetXaxis()->GetXmax();
+    histo->Draw( "Same" );
+    titleDiffHisto = histo->GetTitle();
+    binsDiffHisto  = histo->GetNbinsX();
+    minDiffHisto   = histo->GetXaxis()->GetXmin();
+    maxDiffHisto   = histo->GetXaxis()->GetXmax();
   }
   else {
     origHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
     origHisto->Draw();
-    newHisto->Draw( "Same" );
+    histo->Draw( "Same" );
     titleDiffHisto = origHisto->GetTitle();
     binsDiffHisto  = origHisto->GetNbinsX();
     minDiffHisto   = origHisto->GetXaxis()->GetXmin();
@@ -171,7 +171,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     return -1.;
   }
   if ( origHistoFilled ) diffHisto->Add( origHisto );
-  if ( newHistoFilled )  diffHisto->Add( newHisto, -1. );
+  if ( histoFilled )  diffHisto->Add( histo, -1. );
   diffHisto->SetMarkerColor( kBlack );
   diffHisto->SetMarkerStyle( 7 );
   diffHisto->SetLineColor( kBlack );
@@ -183,11 +183,11 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   legOrigTxt += origHisto->GetEntries();
   legOrigTxt += " entries)";
   leg->AddEntry( origHisto, legOrigTxt, "F" );
-  TString legNewTxt( "new (" );
-  legNewTxt += newHisto->GetEntries();
-  legNewTxt += " entries)";
-  leg->AddEntry( newHisto, legNewTxt, "L" );
-  leg->AddEntry( diffHisto, "diff (orig-new)", "FP" );
+  TString legTxt( "new (" );
+  legTxt += histo->GetEntries();
+  legTxt += " entries)";
+  leg->AddEntry( histo, legTxt, "L" );
+  leg->AddEntry( diffHisto, "diff", "FP" );
   leg->Draw();
 
   // Check
@@ -205,7 +205,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
       }
     }
   }
-  if ( diff != 0. || origHisto->GetEntries() != newHisto->GetEntries() ) {
+  if ( diff != 0. || origHisto->GetEntries() != histo->GetEntries() ) {
     std::cout << "validatePatTuple WARNING:" << std::endl;
     std::cout << "--> variable '" << var.Data() << "' has differences." << std::endl;
   }
@@ -638,22 +638,32 @@ Double_t plotVarsMetUncertainties()
 }
 
 
-Double_t validatePatTuple( const TString testID, const TString origFile, const TString newFile, bool showAll = false, bool verbose = false )
+Double_t validatePatTuple( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool showAll = false, bool verbose = false )
 {
   // Parameters
   showAll_ = showAll;
   verbose_ = verbose;
 
+  TString origFileName(origFile  );
+  // Default file names
+  if ( origFileName.Length() == 0 ) {
+    origFileName = TString( "patTuple_" + testID + ".orig.root" );
+  }
+  TString fileName( file );
+  if ( fileName.Length() == 0 ) {
+    fileName = TString( "patTuple_" + testID + ".root" );
+  }
+
   // Get files and trees
-  origFile_ = TFile::Open( origFile );
+  origFile_ = TFile::Open( origFileName );
   if ( !origFile_ ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> original file '" << origFile.Data() << "' could not be opened." << std::endl;
+    std::cout << "--> original file '" << origFileName.Data() << "' could not be opened." << std::endl;
     return 1;
   }
   if ( verbose_ ) {
     std::cout << "validatePatTuple INFO:" << std::endl;
-    std::cout << "--> original file '" << origFile.Data() << "' opened." << std::endl;
+    std::cout << "--> original file '" << origFileName.Data() << "' opened." << std::endl;
   }
   origEvents_ = ( TTree* )( origFile_->Get( "Events" ) );
   if ( !origEvents_ ) {
@@ -662,30 +672,30 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
     origFile_->Close();
     return 1;
   }
-  newFile_ = TFile::Open( newFile );
-  if ( !newFile_ ) {
+  file_ = TFile::Open( fileName );
+  if ( !file_ ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> new file '" << origFile.Data() << "' could not be opened." << std::endl;
+    std::cout << "--> new file '" << fileName.Data() << "' could not be opened." << std::endl;
     origFile_->Close();
     return 1;
   }
   if ( verbose_ ) {
     std::cout << "validatePatTuple INFO:" << std::endl;
-    std::cout << "--> new file '" << newFile.Data() << "' opened." << std::endl;
+    std::cout << "--> file '" << fileName.Data() << "' opened." << std::endl;
   }
-  newEvents_  = ( TTree* )( TFile::Open( newFile )->Get( "Events" ) );
-  if ( !newEvents_ ) {
+  events_  = ( TTree* )( TFile::Open( fileName )->Get( "Events" ) );
+  if ( !events_ ) {
     std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> new tree 'Events' could not be read." << std::endl;
+    std::cout << "--> tree 'Events' could not be read." << std::endl;
     origFile_->Close();
-    newFile_->Close();
+    file_->Close();
     return 1;
   }
 
   // Normalisation
   Int_t nOrig( origEvents_->GetEntries() );
-  Int_t nNew( newEvents_->GetEntries() );
-  nMax_ = TMath::Min( nOrig, nNew );
+  Int_t n( events_->GetEntries() );
+  nMax_ = TMath::Min( nOrig, n );
 
   // RooT
   gStyle->SetOptStat( 0 );
@@ -742,7 +752,7 @@ Double_t validatePatTuple( const TString testID, const TString origFile, const T
   }
 
   origFile_->Close();
-  newFile_->Close();
+  file_->Close();
 
   print();
 
