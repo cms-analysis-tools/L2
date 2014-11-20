@@ -3,7 +3,8 @@
 //
 // (inspirde by code from Slava and J.R.)
 //
-// e.g. > root -l '~/work/cms/CMSSW/L2/scripts/validatePatTuple.C+ ( "standard", "patTuple_standard.orig.root", "patTuple_standard.root" );'
+// e.g. > cp ~/work/cms/CMSSW/L2/scripts/validatePat*.C
+// e.g. > root -l 'validatePatTuple.C+( "standard" );'
 //
 
 
