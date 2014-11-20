@@ -56,8 +56,10 @@ TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, 
   events->Draw( var + ">>" + nameHistoTmp, "", "", nMax_ );
   TH1F* histoTmp( ( TH1F* )gROOT->Get( nameHistoTmp ) );
   if ( !histoTmp ) {
-    std::cout << "validatePatTuple WARNING:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoTmp.Data() << "' could not be plotted." << std::endl;
+    if ( verbose_ ) {
+      std::cout << "validatePatTuple INFO:" << std::endl;
+      std::cout << "--> histogram '" << nameHistoTmp.Data() << "' could not be plotted." << std::endl;
+    }
     return histo;
   }
   Float_t xMin( histoTmp->GetXaxis()->GetXmin() );
