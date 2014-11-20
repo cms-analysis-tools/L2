@@ -56,7 +56,7 @@ TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, 
   events->Draw( var + ">>" + nameHistoTmp, "", "", nMax_ );
   TH1F* histoTmp( ( TH1F* )gROOT->Get( nameHistoTmp ) );
   if ( !histoTmp ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
     std::cout << "--> histogram '" << nameHistoTmp.Data() << "' could not be plotted." << std::endl;
     return histo;
   }
@@ -107,16 +107,17 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   // Reference histogram
   TString nameHistoOrig( "orig_" + name );
   TH1F* origHisto = createHisto( var, origEvents_, nameHistoOrig, area );
+  Bool_t origHistoFilled( false );
   if ( !origHisto ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoOrig.Data() << "' has not been created." << std::endl;
-    delete canvas;
-    return -1.;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
+    std::cout << "--> histogram '" << nameHistoOrig.Data() << "' has not been created properly." << std::endl;
   }
-  origHisto->SetLineColor( kRed );
-  origHisto->SetFillColor( kYellow );
-  origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
-  Bool_t origHistoFilled( origHisto->GetEntries() > 0 );
+  else {
+    origHisto->SetLineColor( kRed );
+    origHisto->SetFillColor( kYellow );
+    origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
+    origHistoFilled = ( origHisto->GetEntries() > 0 );
+  }
 
   // Histograms
   TString nameHisto( name );
@@ -127,15 +128,16 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   else {
     histo = createHisto( var, events_, nameHisto, area );
   }
+  Bool_t histoFilled( false );
   if ( !histo ) {
-    std::cout << "validatePatTuple ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHisto.Data() << "' has not been created." << std::endl;
-    delete canvas;
-    return -1.;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
+    std::cout << "--> histogram '" << nameHisto.Data() << "' has not been created properly." << std::endl;
   }
-  histo->SetLineColor( kBlue );
-  events_->Draw( var + ">>" + nameHisto, "", "", nMax_ );
-  Bool_t histoFilled( histo->GetEntries() > 0 );
+  else {
+    histo->SetLineColor( kBlue );
+    events_->Draw( var + ">>" + nameHisto, "", "", nMax_ );
+    histoFilled = ( histo->GetEntries() > 0 );
+  }
 
   // Plot
   TString titleDiffHisto;
@@ -143,9 +145,20 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   Float_t minDiffHisto;
   Float_t maxDiffHisto;
   if ( !origHistoFilled ) {
-    if ( !histoFilled ) histo->SetMaximum( 1. );
+    if ( !histoFilled ) {
+      if ( !histo ) {
+        histo = new TH1F( nameHisto, var, 20, 0., 1. );
+        histo->SetLineColor( kBlue );
+      }
+      histo->SetMaximum( 1. );
+    }
     histo->SetMinimum( -0.05 * histo->GetMaximum() );
     histo->Draw();
+    if ( !origHisto ) {
+      origHisto = new TH1F( nameHistoOrig, histo->GetTitle(), histo->GetNbinsX(), histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax() );
+      origHisto->SetLineColor( kRed );
+      origHisto->SetFillColor( kYellow );
+    }
     origHisto->Draw( "Same" );
     histo->Draw( "Same" );
     titleDiffHisto = histo->GetTitle();
@@ -502,6 +515,38 @@ Double_t plotVarAddBTaggings()
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(1)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.partonFlavour()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.hadronFlavour()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pairDiscriVector_@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pairDiscriVector_.second" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  for ( Int_t iDiscr = 0; iDiscr < 64; ++iDiscr ) {
+    TString varExp( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pairDiscriVector_[" );
+    varExp += iDiscr;
+    varExp += "].second";
+    returnValue = plotVar( varExp, 1 );
+    if (returnValue  < 0. ) return -returnSum;
+    returnSum += returnValue;
+  }
   return returnSum;
 }
 

@@ -56,7 +56,7 @@ TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, 
   events->Draw( var + ">>" + nameHistoTmp, "", "", nMax_ );
   TH1F* histoTmp( ( TH1F* )gROOT->Get( nameHistoTmp ) );
   if ( !histoTmp ) {
-    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
     std::cout << "--> histogram '" << nameHistoTmp.Data() << "' could not be plotted." << std::endl;
     return histo;
   }
@@ -100,25 +100,26 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   TCanvas* canvas( new TCanvas( nameCanvas, var ) );
   canvas->SetGrid();
   if ( verbose_ ) {
-    std::cout << "validatePatMiniAOD INFO:" << std::endl;
+    std::cout << "validatePatTuple INFO:" << std::endl;
     std::cout << "--> canvas '" << nameCanvas.Data() << "' created." << std::endl;
   }
 
   // Reference histogram
   TString nameHistoOrig( "orig_" + name );
   TH1F* origHisto = createHisto( var, origEvents_, nameHistoOrig, area );
+  Bool_t origHistoFilled( false );
   if ( !origHisto ) {
-    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHistoOrig.Data() << "' has not been created." << std::endl;
-    delete canvas;
-    return -1.;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
+    std::cout << "--> histogram '" << nameHistoOrig.Data() << "' has not been created properly." << std::endl;
   }
-  origHisto->SetLineColor( kRed );
-  origHisto->SetFillColor( kYellow );
-  origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
-  Bool_t origHistoFilled( origHisto->GetEntries() > 0 );
+  else {
+    origHisto->SetLineColor( kRed );
+    origHisto->SetFillColor( kYellow );
+    origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
+    origHistoFilled = ( origHisto->GetEntries() > 0 );
+  }
 
-  // Histogram
+  // Histograms
   TString nameHisto( name );
   TH1F* histo;
   if ( origHistoFilled ) {
@@ -127,15 +128,16 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   else {
     histo = createHisto( var, events_, nameHisto, area );
   }
+  Bool_t histoFilled( false );
   if ( !histo ) {
-    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
-    std::cout << "--> histogram '" << nameHisto.Data() << "' has not been created." << std::endl;
-    delete canvas;
-    return -1.;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
+    std::cout << "--> histogram '" << nameHisto.Data() << "' has not been created properly." << std::endl;
   }
-  histo->SetLineColor( kBlue );
-  events_->Draw( var + ">>" + nameHisto, "", "", nMax_ );
-  Bool_t histoFilled( histo->GetEntries() > 0 );
+  else {
+    histo->SetLineColor( kBlue );
+    events_->Draw( var + ">>" + nameHisto, "", "", nMax_ );
+    histoFilled = ( histo->GetEntries() > 0 );
+  }
 
   // Plot
   TString titleDiffHisto;
@@ -143,9 +145,20 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   Float_t minDiffHisto;
   Float_t maxDiffHisto;
   if ( !origHistoFilled ) {
-    if ( !histoFilled ) histo->SetMaximum( 1. );
+    if ( !histoFilled ) {
+      if ( !histo ) {
+        histo = new TH1F( nameHisto, var, 20, 0., 1. );
+        histo->SetLineColor( kBlue );
+      }
+      histo->SetMaximum( 1. );
+    }
     histo->SetMinimum( -0.05 * histo->GetMaximum() );
     histo->Draw();
+    if ( !origHisto ) {
+      origHisto = new TH1F( nameHistoOrig, histo->GetTitle(), histo->GetNbinsX(), histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax() );
+      origHisto->SetLineColor( kRed );
+      origHisto->SetFillColor( kYellow );
+    }
     origHisto->Draw( "Same" );
     histo->Draw( "Same" );
     titleDiffHisto = histo->GetTitle();
@@ -165,7 +178,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   TString nameDiffHist( "diff_" + name );
   TH1F* diffHisto( new TH1F( nameDiffHist, titleDiffHisto, binsDiffHisto, minDiffHisto, maxDiffHisto ) );
   if ( !diffHisto ) {
-    std::cout << "validatePatMiniAOD ERROR:" << std::endl;
+    std::cout << "validatePatTuple ERROR:" << std::endl;
     std::cout << "--> histogram '" << nameDiffHist.Data() << "' could not be plotted." << std::endl;
     delete canvas;
     return -1.;
@@ -197,7 +210,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     if ( std::fabs( diffHisto->GetBinContent( iBin ) ) != 0. ) {
       if ( iBin == 0 || iBin == diffHisto->GetBinContent( iBin ) || verbose_ ) {
         TString mode( verbose_ ? "INFO" : "WARNING" );
-        std::cout << "validatePatMiniAOD " << mode.Data() << ":" << std::endl;
+        std::cout << "validatePatTuple " << mode.Data() << ":" << std::endl;
         std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
         if ( iBin == 0 )                               std::cout << " (underflow)";
         else if ( iBin == diffHisto->GetNbinsX() + 1 ) std::cout << " (overflow)";
@@ -206,7 +219,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     }
   }
   if ( diff != 0. || origHisto->GetEntries() != histo->GetEntries() ) {
-    std::cout << "validatePatMiniAOD WARNING:" << std::endl;
+    std::cout << "validatePatTuple WARNING:" << std::endl;
     std::cout << "--> variable '" << var.Data() << "' has differences." << std::endl;
   }
   else if ( !showAll_ ) {
