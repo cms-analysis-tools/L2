@@ -152,7 +152,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
       }
       histo->SetMaximum( 1. );
     }
-    histo->SetMinimum( -0.05 * histo->GetMaximum() );
+    histo->SetMinimum( -TMath::Sqrt( histo->GetMaximum() ) );
     histo->Draw();
     if ( !origHisto ) {
       origHisto = new TH1F( nameHistoOrig, histo->GetTitle(), histo->GetNbinsX(), histo->GetXaxis()->GetXmin(), histo->GetXaxis()->GetXmax() );
@@ -167,7 +167,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
     maxDiffHisto   = histo->GetXaxis()->GetXmax();
   }
   else {
-    origHisto->SetMinimum( -0.05 * origHisto->GetMaximum() );
+    origHisto->SetMinimum( -TMath::Sqrt( origHisto->GetMaximum() ) );
     origHisto->Draw();
     histo->Draw( "Same" );
     titleDiffHisto = origHisto->GetTitle();
