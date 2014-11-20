@@ -501,7 +501,7 @@ Double_t plotVarAddBTaggings()
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_.second" );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
-  for ( Int_t iDiscr = 0; iDiscr < 57; ++iDiscr ) {
+  for ( Int_t iDiscr = 0; iDiscr < 64; ++iDiscr ) {
     TString varExp( "patJets_selectedPatJetsAK4PF__PAT.obj.pairDiscriVector_[" );
     varExp += iDiscr;
     varExp += "].second";
