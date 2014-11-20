@@ -515,6 +515,38 @@ Double_t plotVarAddBTaggings()
   returnValue = plotVar( "patJets_selectedPatJetsAK4PF__PAT.obj.jecFactor(1)", 1 );
   if (returnValue  < 0. ) return -returnSum;
   returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pt()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.eta()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.phi()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.partonFlavour()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.hadronFlavour()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pairDiscriVector_@.size()" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  returnValue = plotVar( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pairDiscriVector_.second" );
+  if (returnValue  < 0. ) return -returnSum;
+  returnSum += returnValue;
+  for ( Int_t iDiscr = 0; iDiscr < 64; ++iDiscr ) {
+    TString varExp( "patJets_selectedPatJetsCA8PFCHSPrunedSubjets__PAT.obj.pairDiscriVector_[" );
+    varExp += iDiscr;
+    varExp += "].second";
+    returnValue = plotVar( varExp, 1 );
+    if (returnValue  < 0. ) return -returnSum;
+    returnSum += returnValue;
+  }
   return returnSum;
 }
 
