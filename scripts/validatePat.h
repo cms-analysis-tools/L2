@@ -117,10 +117,16 @@ Double_t plotVar( const TString& varOrig, Int_t area = 0, Bool_t diffNew = false
   // Histograms
   TString nameHisto( name );
   TString var( varOrig );
-  // Uncomment and fill, if e.g. variable name has changed
-//   if ( diffNew ) {
-//   }
-  TH1F* histo;
+
+  // Fill, if e.g. variable name has changed
+  if ( diffNew ) {
+    if ( verbose_ ) {
+      std::cout << "validatePatTuple INFO:" << std::endl;
+      std::cout << "--> parameter 'diffNew' set to true." << std::endl;
+    }
+  }
+
+TH1F* histo;
   if ( origHistoFilled ) {
     histo = new TH1F( nameHisto, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
   }
