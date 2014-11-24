@@ -338,9 +338,10 @@ Double_t plotVarsData()
 }
 
 
-Double_t validatePatMiniAOD( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool showAll = false, bool verbose = false )
+Double_t validatePatMiniAOD( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool diffNew = false, bool showAll = false, bool verbose = false )
 {
   // Parameters
+  diffNew_ = diffNew;
   showAll_ = showAll;
   verbose_ = verbose;
 
@@ -406,9 +407,9 @@ Double_t validatePatMiniAOD( const TString testID, const TString origFile = TStr
   if ( testID == "standard" ) {/**/
     returnValue = plotVarsStandard();
   }
-//   else if ( testID == "data" ) {
-//     returnValue =plotVarsData();
-//   }
+  else if ( testID == "data" ) {
+    returnValue =plotVarsData();
+  }
   else {
     std::cout << "validatePatMiniAOD ERROR:" << std::endl;
     std::cout << "--> testID '" << testID << "' is not available." << std::endl;

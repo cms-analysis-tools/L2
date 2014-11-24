@@ -464,9 +464,10 @@ Double_t plotVarsMetUncertainties()
 }
 
 
-Double_t validatePatTuple( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool showAll = false, bool verbose = false )
+Double_t validatePatTuple( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool diffNew = false, bool showAll = false, bool verbose = false )
 {
   // Parameters
+  diffNew_ = diffNew;
   showAll_ = showAll;
   verbose_ = verbose;
 

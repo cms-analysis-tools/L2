@@ -19,6 +19,7 @@
 
 // Global variables
 
+bool diffNew_ = false;
 bool showAll_ = false;
 bool verbose_ = false;
 TFile* origFile_ = 0;
@@ -77,10 +78,10 @@ TH1F* createHisto( const TString& var, TTree* events, const TString& nameHisto, 
 }
 
 
-Double_t plotVar( const TString& var, Int_t area = 0 )
+Double_t plotVar( const TString& varOrig, Int_t area = 0, Bool_t diffNew = false )
 {
   // Create individual name
-  TString name( var );
+  TString name( varOrig );
   name.ReplaceAll( ".", "_" );
   name.ReplaceAll( "(", "" );
   name.ReplaceAll( ")", "" );
@@ -90,7 +91,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
 
   // Canvas
   TString nameCanvas( "c_" + name );
-  TCanvas* canvas( new TCanvas( nameCanvas, var ) );
+  TCanvas* canvas( new TCanvas( nameCanvas, varOrig ) );
   canvas->SetGrid();
   if ( verbose_ ) {
     std::cout << "validatePatTuple INFO:" << std::endl;
@@ -99,7 +100,7 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
 
   // Reference histogram
   TString nameHistoOrig( "orig_" + name );
-  TH1F* origHisto = createHisto( var, origEvents_, nameHistoOrig, area );
+  TH1F* origHisto = createHisto( varOrig, origEvents_, nameHistoOrig, area );
   Bool_t origHistoFilled( false );
   if ( !origHisto ) {
     std::cout << "validatePatTuple WARNING:" << std::endl;
@@ -108,18 +109,22 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
   else {
     origHisto->SetLineColor( kRed );
     origHisto->SetFillColor( kYellow );
-    origEvents_->Draw( var + ">>" + nameHistoOrig, "", "", nMax_ );
+    origEvents_->Draw( varOrig + ">>" + nameHistoOrig, "", "", nMax_ );
     origHistoFilled = ( origHisto->GetEntries() > 0 );
   }
 
   // Histograms
   TString nameHisto( name );
+  TString var( varOrig );
+  // Uncomment and fill, if e.g. variable name has changed
+//   if ( diffNew ) {
+//   }
   TH1F* histo;
   if ( origHistoFilled ) {
     histo = new TH1F( nameHisto, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
   }
   else {
-    histo = createHisto( var, events_, nameHisto, area );
+    histo = createHisto( varNew, events_, nameHisto, area );
   }
   Bool_t histoFilled( false );
   if ( !histo ) {
@@ -204,7 +209,8 @@ Double_t plotVar( const TString& var, Int_t area = 0 )
       if ( iBin == 0 || iBin == diffHisto->GetBinContent( iBin ) || verbose_ ) {
         TString mode( verbose_ ? "INFO" : "WARNING" );
         std::cout << "validatePatTuple " << mode.Data() << ":" << std::endl;
-        std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
+        if ( origHisto->GetBinContent( iBin ) == 0. ) std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
+        else                                          std::cout << "--> variable '" << var.Data() << "' has 100% difference in bin " << iBin;
         if ( iBin == 0 )                               std::cout << " (underflow)";
         else if ( iBin == diffHisto->GetNbinsX() + 1 ) std::cout << " (overflow)";
         std::cout << std::endl;
