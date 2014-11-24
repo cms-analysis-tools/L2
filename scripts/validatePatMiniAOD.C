@@ -338,20 +338,22 @@ Double_t plotVarsData()
 }
 
 
-Double_t validatePatMiniAOD( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool showAll = false, bool verbose = false )
+Double_t validatePatMiniAOD( const TString testID, const TString origFile = TString( "" ), const TString file = TString( "" ), bool diffNew = false, bool showAll = false, bool verbose = false )
 {
   // Parameters
+  testID_  = testID;
+  diffNew_ = diffNew;
   showAll_ = showAll;
   verbose_ = verbose;
 
   TString origFileName(origFile  );
   // Default file names
   if ( origFileName.Length() == 0 ) {
-    origFileName = TString( "patMiniAOD_" + testID + ".orig.root" );
+    origFileName = TString( "patMiniAOD_" + testID_ + ".orig.root" );
   }
   TString fileName( file );
   if ( fileName.Length() == 0 ) {
-    fileName = TString( "patMiniAOD_" + testID + ".root" );
+    fileName = TString( "patMiniAOD_" + testID_ + ".root" );
   }
 
   // Get files and trees
@@ -403,15 +405,15 @@ Double_t validatePatMiniAOD( const TString testID, const TString origFile = TStr
 
   // Act according to ID
   Double_t returnValue( 0. );
-  if ( testID == "standard" ) {/**/
+  if ( testID_ == "standard" ) {
     returnValue = plotVarsStandard();
   }
-//   else if ( testID == "data" ) {
-//     returnValue =plotVarsData();
-//   }
+  else if ( testID_ == "data" ) {
+    returnValue = plotVarsData();
+  }
   else {
     std::cout << "validatePatMiniAOD ERROR:" << std::endl;
-    std::cout << "--> testID '" << testID << "' is not available." << std::endl;
+    std::cout << "--> testID '" << testID_ << "' is not available." << std::endl;
     returnValue = -1.;
   }
 
