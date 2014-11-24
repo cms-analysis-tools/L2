@@ -19,6 +19,7 @@
 
 // Global variables
 
+TString testID_ = "c";
 bool diffNew_ = false;
 bool showAll_ = false;
 bool verbose_ = false;
@@ -90,7 +91,7 @@ Double_t plotVar( const TString& varOrig, Int_t area = 0, Bool_t diffNew = false
   name.ReplaceAll( "]", "_" );
 
   // Canvas
-  TString nameCanvas( "c_" + name );
+  TString nameCanvas( testID_ + "_" + name );
   TCanvas* canvas( new TCanvas( nameCanvas, varOrig ) );
   canvas->SetGrid();
   if ( verbose_ ) {
@@ -124,7 +125,7 @@ Double_t plotVar( const TString& varOrig, Int_t area = 0, Bool_t diffNew = false
     histo = new TH1F( nameHisto, origHisto->GetTitle(), origHisto->GetNbinsX(), origHisto->GetXaxis()->GetXmin(), origHisto->GetXaxis()->GetXmax() );
   }
   else {
-    histo = createHisto( varNew, events_, nameHisto, area );
+    histo = createHisto( var, events_, nameHisto, area );
   }
   Bool_t histoFilled( false );
   if ( !histo ) {
@@ -206,11 +207,11 @@ Double_t plotVar( const TString& varOrig, Int_t area = 0, Bool_t diffNew = false
   for ( Int_t iBin = 0; iBin <= diffHisto->GetNbinsX() + 1; ++iBin ) {
     diff += std::fabs( diffHisto->GetBinContent( iBin ) );
     if ( std::fabs( diffHisto->GetBinContent( iBin ) ) != 0. ) {
-      if ( iBin == 0 || iBin == diffHisto->GetBinContent( iBin ) || verbose_ ) {
+      if ( iBin == 0 || iBin == diffHisto->GetNbinsX() + 1 || verbose_ ) {
         TString mode( verbose_ ? "INFO" : "WARNING" );
         std::cout << "validatePatTuple " << mode.Data() << ":" << std::endl;
         if ( origHisto->GetBinContent( iBin ) == 0. ) std::cout << "--> variable '" << var.Data() << "' has " << 100. * ( diffHisto->GetBinContent( iBin ) / origHisto->GetBinContent( iBin ) ) << "% difference in bin " << iBin;
-        else                                          std::cout << "--> variable '" << var.Data() << "' has 100% difference in bin " << iBin;
+        else                                          std::cout << "--> variable '" << var.Data() << "' differs in bin " << iBin;
         if ( iBin == 0 )                               std::cout << " (underflow)";
         else if ( iBin == diffHisto->GetNbinsX() + 1 ) std::cout << " (overflow)";
         std::cout << std::endl;
